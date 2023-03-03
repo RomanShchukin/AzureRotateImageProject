@@ -1,0 +1,309 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Анализ_JSON": {
+                "inputs": {
+                    "content": "@string(decodeBase64(triggerBody()?['ContentData']))",
+                    "schema": {
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {},
+                "type": "ParseJson"
+            },
+            "Документы_запроса_V5": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['documentdb']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/v5/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/query",
+                    "queries": {
+                        "queryText": "SELECT * FROM c WHERE c.id = \"@{body('Анализ_JSON')?['id']}\" and c.state = \"created\""
+                    }
+                },
+                "runAfter": {
+                    "Анализ_JSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "Условие": {
+                "actions": {
+                    "Анализ_JSON_2": {
+                        "inputs": {
+                            "content": "@first(body('Документы_запроса_V5')?['value'])",
+                            "schema": {
+                                "properties": {
+                                    "contentType": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "path": {
+                                        "type": "string"
+                                    },
+                                    "state": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "runAfter": {},
+                        "type": "ParseJson"
+                    },
+                    "Получить_содержимое_BLOB-объекта_по_пути_(v2)": {
+                        "inputs": {
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                }
+                            },
+                            "method": "get",
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/GetFileContentByPath",
+                            "queries": {
+                                "inferContentType": true,
+                                "path": "@body('Анализ_JSON_2')?['path']",
+                                "queryParametersSingleEncoded": true
+                            }
+                        },
+                        "runAfter": {
+                            "Анализ_JSON_2": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Условие_2": {
+                        "actions": {
+                            "Condition": {
+                                "actions": {
+                                    "Create_or_update_document_(V3)": {
+                                        "inputs": {
+                                            "body": {
+                                                "contentType": "@body('Анализ_JSON_2')?['contentType']",
+                                                "id": "@body('Анализ_JSON_2')?['id']",
+                                                "name": "@body('Анализ_JSON_2')?['name']",
+                                                "path": "@body('Анализ_JSON_2')?['path']",
+                                                "rotatedPath": "/images/@{body('HTTP')}",
+                                                "state": "done"
+                                            },
+                                            "headers": {
+                                                "x-ms-documentdb-is-upsert": true
+                                            },
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "path": "/v2/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/docs"
+                                        },
+                                        "runAfter": {},
+                                        "type": "ApiConnection"
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Create_or_update_document_(V3)_2": {
+                                            "inputs": {
+                                                "body": {
+                                                    "contentType": "@body('Анализ_JSON_2')?['contentType']",
+                                                    "id": "@body('Анализ_JSON_2')?['id']",
+                                                    "name": "@body('Анализ_JSON_2')?['name']",
+                                                    "path": "@body('Анализ_JSON_2')?['path']",
+                                                    "state": "error"
+                                                },
+                                                "headers": {
+                                                    "x-ms-documentdb-is-upsert": true
+                                                },
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "path": "/v2/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/docs"
+                                            },
+                                            "runAfter": {},
+                                            "type": "ApiConnection"
+                                        }
+                                    }
+                                },
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@outputs('HTTP')['statusCode']",
+                                                200
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "runAfter": {
+                                    "HTTP": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "If"
+                            },
+                            "HTTP": {
+                                "inputs": {
+                                    "headers": {
+                                        "Ocp-Apim-Subscription-Key": "36342443276049dba9c6d354c7866275"
+                                    },
+                                    "method": "GET",
+                                    "queries": {
+                                        "path": "20f65b62-e5a0-4318-8eda-c84572e38a8f"
+                                    },
+                                    "uri": "https://imagestorage.azure-api.net/image/rotate/Image"
+                                },
+                                "runAfter": {
+                                    "Создать_или_обновить_документ_(V3)": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "Http"
+                            },
+                            "Создать_или_обновить_документ_(V3)": {
+                                "inputs": {
+                                    "body": {
+                                        "contentType": "@body('Анализ_JSON_2')?['contentType']",
+                                        "id": "@body('Анализ_JSON_2')?['id']",
+                                        "name": "@body('Анализ_JSON_2')?['name']",
+                                        "path": "@body('Анализ_JSON_2')?['path']",
+                                        "state": "in progress"
+                                    },
+                                    "headers": {
+                                        "x-ms-documentdb-is-upsert": true
+                                    },
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "path": "/v2/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/docs"
+                                },
+                                "runAfter": {},
+                                "type": "ApiConnection"
+                            }
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "lessOrEquals": [
+                                        "@decimal(actions('Получить_содержимое_BLOB-объекта_по_пути_(v2)').outputs?['headers']?['Content-Length'])",
+                                        "@parameters('maxImageSize')"
+                                    ]
+                                }
+                            ]
+                        },
+                        "runAfter": {
+                            "Получить_содержимое_BLOB-объекта_по_пути_(v2)": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "If"
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "not": {
+                                "equals": [
+                                    "@body('Документы_запроса_V5')",
+                                    "@null"
+                                ]
+                            }
+                        },
+                        {
+                            "greater": [
+                                "@length(body('Документы_запроса_V5')?['value'])",
+                                0
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Документы_запроса_V5": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            },
+            "maxImageSize": {
+                "defaultValue": 4816,
+                "type": "Int"
+            }
+        },
+        "triggers": {
+            "When_a_message_is_received_in_a_queue_(auto-complete)": {
+                "evaluatedRecurrence": {
+                    "frequency": "Second",
+                    "interval": 10
+                },
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['servicebus']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/@{encodeURIComponent(encodeURIComponent('rotatetasks'))}/messages/head",
+                    "queries": {
+                        "queueType": "Main"
+                    }
+                },
+                "recurrence": {
+                    "frequency": "Second",
+                    "interval": 10
+                },
+                "type": "ApiConnection"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "azureblob": {
+                    "connectionId": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/resourceGroups/r_shchukin_image_storage/providers/Microsoft.Web/connections/azureblob-3",
+                    "connectionName": "azureblob-3",
+                    "id": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/providers/Microsoft.Web/locations/eastus/managedApis/azureblob"
+                },
+                "documentdb": {
+                    "connectionId": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/resourceGroups/r_shchukin_image_storage/providers/Microsoft.Web/connections/documentdb-1",
+                    "connectionName": "documentdb-1",
+                    "id": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/providers/Microsoft.Web/locations/eastus/managedApis/documentdb"
+                },
+                "servicebus": {
+                    "connectionId": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/resourceGroups/r_shchukin_image_storage/providers/Microsoft.Web/connections/servicebus-5",
+                    "connectionName": "servicebus-5",
+                    "id": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/providers/Microsoft.Web/locations/eastus/managedApis/servicebus"
+                }
+            }
+        }
+    }
+}

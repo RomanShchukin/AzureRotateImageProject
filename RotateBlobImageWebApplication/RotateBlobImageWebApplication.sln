@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RotateBlobImageWebApplication", "RotateBlobImageWebApplication\RotateBlobImageWebApplication.csproj", "{8C059B2A-4E12-4C95-BFF5-CB6A859519B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageRotator", "ImageRotator\ImageRotator.csproj", "{908F7F42-EF17-4F94-A15E-632F2D25FE81}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageStorage", "ImageReader\ImageStorage.csproj", "{B846C232-5C5F-4039-8E08-1F26C3011F27}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RotatBlobImageTestProject", "RotatBlobImageTestProject\RotatBlobImageTestProject.csproj", "{CFBC378C-93EC-4998-BBAC-6748CE56A85B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C059B2A-4E12-4C95-BFF5-CB6A859519B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C059B2A-4E12-4C95-BFF5-CB6A859519B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C059B2A-4E12-4C95-BFF5-CB6A859519B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C059B2A-4E12-4C95-BFF5-CB6A859519B5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{908F7F42-EF17-4F94-A15E-632F2D25FE81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{908F7F42-EF17-4F94-A15E-632F2D25FE81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{908F7F42-EF17-4F94-A15E-632F2D25FE81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{908F7F42-EF17-4F94-A15E-632F2D25FE81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B846C232-5C5F-4039-8E08-1F26C3011F27}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B846C232-5C5F-4039-8E08-1F26C3011F27}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B846C232-5C5F-4039-8E08-1F26C3011F27}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B846C232-5C5F-4039-8E08-1F26C3011F27}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFBC378C-93EC-4998-BBAC-6748CE56A85B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFBC378C-93EC-4998-BBAC-6748CE56A85B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFBC378C-93EC-4998-BBAC-6748CE56A85B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFBC378C-93EC-4998-BBAC-6748CE56A85B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A3285489-787E-44A5-A009-C9F5B1CDAABF}
+	EndGlobalSection
+EndGlobal

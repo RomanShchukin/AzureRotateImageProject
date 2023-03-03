@@ -1,0 +1,65 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Документы_запроса_V5": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['documentdb']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/v5/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/query",
+                    "queries": {
+                        "queryText": "SELECT * FROM c WHERE c.id = \"@{triggerOutputs()['relativePathParameters']['id']}\""
+                    }
+                },
+                "runAfter": {},
+                "type": "ApiConnection"
+            },
+            "Ответ": {
+                "inputs": {
+                    "body": "@first(body('Документы_запроса_V5')?['value'])",
+                    "statusCode": 200
+                },
+                "kind": "Http",
+                "runAfter": {
+                    "Документы_запроса_V5": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Response"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "method": "GET",
+                    "relativePath": "/image/{id}"
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "documentdb": {
+                    "connectionId": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/resourceGroups/r_shchukin_image_storage/providers/Microsoft.Web/connections/documentdb-1",
+                    "connectionName": "documentdb-1",
+                    "id": "/subscriptions/b0fd0a92-5178-48a1-bd9c-666ad405b37a/providers/Microsoft.Web/locations/eastus/managedApis/documentdb"
+                }
+            }
+        }
+    }
+}
