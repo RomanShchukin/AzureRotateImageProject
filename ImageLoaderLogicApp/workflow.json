@@ -2,6 +2,152 @@
     "definition": {
         "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
         "actions": {
+            "Condition": {
+                "actions": {
+                    "Ответ": {
+                        "inputs": {
+                            "body": {
+                                "id": "@body('Создать_или_обновить_документ_(V3)')?['id']"
+                            },
+                            "statusCode": 200
+                        },
+                        "kind": "http",
+                        "runAfter": {
+                            "Отправка_сообщения": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Response"
+                    },
+                    "Отправка_сообщения": {
+                        "inputs": {
+                            "body": {
+                                "ContentData": "@{base64(outputs('Создание_2'))}",
+                                "ContentType": "application/json"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['servicebus_5']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/@{encodeURIComponent(encodeURIComponent('rotatetasks'))}/messages",
+                            "queries": {
+                                "systemProperties": "None"
+                            }
+                        },
+                        "runAfter": {
+                            "Создание_2": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Создание_2": {
+                        "inputs": {
+                            "id": "@{body('Создать_или_обновить_документ_(V3)')?['id']}"
+                        },
+                        "runAfter": {
+                            "Создать_или_обновить_документ_(V3)": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "Compose"
+                    },
+                    "Создать_BLOB-объект_(v2)": {
+                        "inputs": {
+                            "body": "@first(triggerBody()['$multipart'])?['body']?['$content']",
+                            "headers": {
+                                "Content-Type": "@variables('contentType')",
+                                "ReadFileMetadataFromServer": true
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                            "queries": {
+                                "folderPath": "/images",
+                                "name": "@variables('id')",
+                                "queryParametersSingleEncoded": true
+                            }
+                        },
+                        "runAfter": {},
+                        "runtimeConfiguration": {
+                            "contentTransfer": {
+                                "transferMode": "Chunked"
+                            }
+                        },
+                        "type": "ApiConnection"
+                    },
+                    "Создать_или_обновить_документ_(V3)": {
+                        "inputs": {
+                            "body": {
+                                "contentType": "@variables('contentType')",
+                                "id": "@variables('id')",
+                                "name": "@variables('fileName')",
+                                "path": "@body('Создать_BLOB-объект_(v2)')?['Path']",
+                                "state": "created"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['documentdb_1']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/docs"
+                        },
+                        "runAfter": {
+                            "Создать_BLOB-объект_(v2)": [
+                                "Succeeded"
+                            ]
+                        },
+                        "type": "ApiConnection"
+                    }
+                },
+                "else": {
+                    "actions": {
+                        "Response": {
+                            "inputs": {
+                                "statusCode": 400
+                            },
+                            "kind": "http",
+                            "runAfter": {},
+                            "type": "Response"
+                        }
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@contains(variables('contentType'), 'image/')",
+                                true
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Инициализировать_переменную_3": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Response_2": {
+                "inputs": {
+                    "statusCode": 400
+                },
+                "kind": "http",
+                "runAfter": {
+                    "Инициализировать_переменную_4": [
+                        "FAILED"
+                    ]
+                },
+                "type": "Response"
+            },
             "Инициализировать_переменную": {
                 "inputs": {
                     "variables": [
@@ -65,112 +211,6 @@
                 },
                 "runAfter": {},
                 "type": "InitializeVariable"
-            },
-            "Ответ": {
-                "inputs": {
-                    "body": {
-                        "id": "@body('Создать_или_обновить_документ_(V3)')?['id']"
-                    },
-                    "statusCode": 200
-                },
-                "kind": "Http",
-                "runAfter": {
-                    "Отправка_сообщения": [
-                        "Succeeded"
-                    ]
-                },
-                "type": "Response"
-            },
-            "Отправка_сообщения": {
-                "inputs": {
-                    "body": {
-                        "ContentData": "@{base64(outputs('Создание_2'))}",
-                        "ContentType": "application/json"
-                    },
-                    "host": {
-                        "connection": {
-                            "name": "@parameters('$connections')['servicebus_5']['connectionId']"
-                        }
-                    },
-                    "method": "post",
-                    "path": "/@{encodeURIComponent(encodeURIComponent('rotatetasks'))}/messages",
-                    "queries": {
-                        "systemProperties": "None"
-                    }
-                },
-                "runAfter": {
-                    "Создание_2": [
-                        "Succeeded"
-                    ]
-                },
-                "type": "ApiConnection"
-            },
-            "Создание_2": {
-                "inputs": {
-                    "id": "@{body('Создать_или_обновить_документ_(V3)')?['id']}"
-                },
-                "runAfter": {
-                    "Создать_или_обновить_документ_(V3)": [
-                        "Succeeded"
-                    ]
-                },
-                "type": "Compose"
-            },
-            "Создать_BLOB-объект_(v2)": {
-                "inputs": {
-                    "body": "@first(triggerBody()['$multipart'])?['body']?['$content']",
-                    "headers": {
-                        "Content-Type": "@variables('contentType')",
-                        "ReadFileMetadataFromServer": true
-                    },
-                    "host": {
-                        "connection": {
-                            "name": "@parameters('$connections')['azureblob']['connectionId']"
-                        }
-                    },
-                    "method": "post",
-                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
-                    "queries": {
-                        "folderPath": "/images",
-                        "name": "@variables('id')",
-                        "queryParametersSingleEncoded": true
-                    }
-                },
-                "runAfter": {
-                    "Инициализировать_переменную_3": [
-                        "Succeeded"
-                    ]
-                },
-                "runtimeConfiguration": {
-                    "contentTransfer": {
-                        "transferMode": "Chunked"
-                    }
-                },
-                "type": "ApiConnection"
-            },
-            "Создать_или_обновить_документ_(V3)": {
-                "inputs": {
-                    "body": {
-                        "contentType": "@variables('contentType')",
-                        "id": "@variables('id')",
-                        "name": "@variables('fileName')",
-                        "path": "@body('Создать_BLOB-объект_(v2)')?['Path']",
-                        "state": "created"
-                    },
-                    "host": {
-                        "connection": {
-                            "name": "@parameters('$connections')['documentdb_1']['connectionId']"
-                        }
-                    },
-                    "method": "post",
-                    "path": "/v2/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/docs"
-                },
-                "runAfter": {
-                    "Создать_BLOB-объект_(v2)": [
-                        "Succeeded"
-                    ]
-                },
-                "type": "ApiConnection"
             }
         },
         "contentVersion": "1.0.0.0",
