@@ -1,6 +1,5 @@
-using Azure.Core.Diagnostics;
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Mvc;
-using System.Text;
 
 namespace RotateBlobImageWebApplication.Controllers
 {
@@ -9,10 +8,12 @@ namespace RotateBlobImageWebApplication.Controllers
     public class ImageController : ControllerBase
     {
         private readonly ILogger<ImageController> _logger;
+        private readonly BlobServiceClient _blobServiceClient;
 
-        public ImageController(ILogger<ImageController> logger)
+        public ImageController(ILogger<ImageController> logger, BlobServiceClient blobServiceClient)
         {
             _logger = logger;
+            _blobServiceClient = blobServiceClient;
         }
 
         [HttpGet(Name = "Rotate")]
@@ -20,7 +21,7 @@ namespace RotateBlobImageWebApplication.Controllers
         {
             try
             {
-                var rotator = new AzureBlobImageRotator();
+                var rotator = new AzureBlobImageRotator(_blobServiceClient);
 
                 var rotatedImagePath = await rotator.RotateImage(path);
 

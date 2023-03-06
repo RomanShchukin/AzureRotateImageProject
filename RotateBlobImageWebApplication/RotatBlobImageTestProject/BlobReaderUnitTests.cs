@@ -1,23 +1,28 @@
 using ImageReader;
-using System.Drawing.Imaging;
 using System.Text;
-using ImageRotator;
+using Azure.Storage.Blobs;
+using Azure.Identity;
 
 namespace RotatBlobImageTestProject
 {
     public class Tests
     {
+        private BlobServiceClient _blobServiceClient;
         [SetUp]
         public void Setup()
         {
+            _blobServiceClient = new BlobServiceClient(
+                new Uri("https://rshchukinstorageaccount.blob.core.windows.net"),
+                new DefaultAzureCredential());
         }
 
         [Test]
         public async Task TestReabBlob()
         {
-            var reader = new AzureBlobStorage();
 
-            var blob = await reader.ReadBlob("2c00fda4-92c6-4b4d-9f0d-8a7598c7fb90");
+            var reader = new AzureBlobStorage(_blobServiceClient);
+
+            var blob = await reader.ReadBlob("004a8791-78bc-4a64-801b-510b6603c88d");
 
             byte[] data = Convert.FromBase64String(blob.Content.ToString());
             string decodedString = Encoding.UTF8.GetString(data);
@@ -28,9 +33,9 @@ namespace RotatBlobImageTestProject
         [Test]
         public async Task TestReabBlobAndRotate()
         {
-            var reader = new AzureBlobStorage();
+            var reader = new AzureBlobStorage(_blobServiceClient);
 
-            var blob = await reader.ReadBlob("2c00fda4-92c6-4b4d-9f0d-8a7598c7fb90");
+            var blob = await reader.ReadBlob("004a8791-78bc-4a64-801b-510b6603c88d");
 
             byte[] data = Convert.FromBase64String(blob.Content.ToString());
 
@@ -44,9 +49,9 @@ namespace RotatBlobImageTestProject
         [Test]
         public async Task TestReabBlobAndWriteRotate()
         {
-            var storage = new AzureBlobStorage();
+            var storage = new AzureBlobStorage(_blobServiceClient);
 
-            var blob = await storage.ReadBlob("2c00fda4-92c6-4b4d-9f0d-8a7598c7fb90");
+            var blob = await storage.ReadBlob("004a8791-78bc-4a64-801b-510b6603c88d");
             byte[] data = Convert.FromBase64String(blob.Content.ToString());
             var rotatedBlobData = ImageRotator.ImageRotator.Rotate(data, blob.Details.ContentType);
 
