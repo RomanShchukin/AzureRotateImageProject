@@ -10,12 +10,6 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAzureClients(clientBuilder =>
 {
     clientBuilder.AddBlobServiceClient(builder.Configuration["AzureImageStorage:blob"], preferMsi: true);
-    clientBuilder.AddQueueServiceClient(builder.Configuration["AzureImageStorage:queue"], preferMsi: true);
-});
-builder.Services.AddAzureClients(clientBuilder =>
-{
-    clientBuilder.AddBlobServiceClient(builder.Configuration["AzureImageStorage:blob"], preferMsi: true);
-    clientBuilder.AddQueueServiceClient(builder.Configuration["AzureImageStorage:queue"], preferMsi: true);
 });
 
 var app = builder.Build();
