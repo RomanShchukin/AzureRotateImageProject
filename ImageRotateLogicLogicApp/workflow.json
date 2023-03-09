@@ -203,6 +203,33 @@
                                 "type": "ApiConnection"
                             }
                         },
+                        "else": {
+                            "actions": {
+                                "Create_or_update_document_(V3)_3": {
+                                    "inputs": {
+                                        "body": {
+                                            "contentType": "@body('Анализ_JSON_2')?['contentType']",
+                                            "id": "@body('Анализ_JSON_2')?['id']",
+                                            "name": "@body('Анализ_JSON_2')?['name']",
+                                            "path": "@body('Анализ_JSON_2')?['path']",
+                                            "state": "error"
+                                        },
+                                        "headers": {
+                                            "x-ms-documentdb-is-upsert": true
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['documentdb']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/v2/cosmosdb/@{encodeURIComponent('AccountNameFromSettings')}/dbs/@{encodeURIComponent('image_processing')}/colls/@{encodeURIComponent('image_processing_tasks')}/docs"
+                                    },
+                                    "runAfter": {},
+                                    "type": "ApiConnection"
+                                }
+                            }
+                        },
                         "expression": {
                             "and": [
                                 {
